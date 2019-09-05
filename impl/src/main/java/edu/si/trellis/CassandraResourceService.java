@@ -170,13 +170,14 @@ public class CassandraResourceService extends CassandraBuildingService implement
         IRI id = meta.getIdentifier();
         IRI ixnModel = meta.getInteractionModel();
         IRI container = meta.getContainer().orElse(null);
+        boolean hasAcl = meta.getHasAcl();
 
         Optional<BinaryMetadata> binary = meta.getBinary();
         IRI binaryIdentifier = binary.map(BinaryMetadata::getIdentifier).orElse(null);
         String mimeType = binary.flatMap(BinaryMetadata::getMimeType).orElse(null);
         Instant now = now();
 
-        return mutableInsert.execute(ixnModel, mimeType, container, data, now, binaryIdentifier, UUIDs.timeBased(), id);
+        return mutableInsert.execute(ixnModel, mimeType, container, hasAcl, data, now, binaryIdentifier, UUIDs.timeBased(), id);
     }
 
     @Override

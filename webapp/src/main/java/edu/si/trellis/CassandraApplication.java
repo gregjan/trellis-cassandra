@@ -15,12 +15,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.SessionScoped;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.tamaya.Configuration;
 import org.apache.tamaya.format.ConfigurationFormats;
 import org.apache.tamaya.inject.api.Config;
 import org.apache.tamaya.spi.PropertySource;
@@ -32,10 +38,10 @@ import org.trellisldp.auth.basic.BasicAuthFilter;
 import org.trellisldp.http.AgentAuthorizationFilter;
 import org.trellisldp.http.TrellisHttpFilter;
 import org.trellisldp.http.TrellisHttpResource;
-import org.trellisldp.http.WebAcFilter;
-//import org.trellisldp.webdav.TrellisWebDAV;
-//import org.trellisldp.webdav.TrellisWebDAVRequestFilter;
-//import org.trellisldp.webdav.TrellisWebDAVResponseFilter;
+import org.trellisldp.webac.WebAcFilter;
+import org.trellisldp.webdav.TrellisWebDAV;
+import org.trellisldp.webdav.TrellisWebDAVRequestFilter;
+import org.trellisldp.webdav.TrellisWebDAVResponseFilter;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -59,17 +65,17 @@ public class CassandraApplication extends Application {
     @Inject
     private TrellisHttpResource ldpHttpResource;
     
-    // @Inject
-    //private TrellisWebDAV webDav;
+    @Inject
+    private TrellisWebDAV webDav;
     
-    //@Inject
-    //private TrellisWebDAVRequestFilter webDavRequestFilter;
+    @Inject
+    private TrellisWebDAVRequestFilter webDavRequestFilter;
     
     @Inject
     private TrellisHttpFilter httpFilter;
     
-    //@Inject
-    //private TrellisWebDAVResponseFilter webDavResponseFilter;
+    @Inject
+    private TrellisWebDAVResponseFilter webDavResponseFilter;
     
     @Inject 
     private ResourceService resourceService;
@@ -86,12 +92,27 @@ public class CassandraApplication extends Application {
     @Inject
     private WebAcFilter acFilter;
     
+    @Produces @SessionScoped
+    public Connection getJmsConnection(Configuration config) {
+	String jmsUrl = config.get(org.trellisldp.jms.JmsEventService.CONFIG_JMS_URL);
+	String userName = config.get(org.trellisldp.jms.JmsEventService.CONFIG_JMS_USERNAME);
+	String password = config.get(org.trellisldp.jms.JmsEventService.CONFIG_JMS_PASSWORD);
+	ConnectionFactory factory = new ActiveMQConnectionFactory(userName, password, jmsUrl);
+	Connection con = null;
+	try {
+	    con = factory.createConnection();
+	} catch(JMSException e) {
+	    throw new Error("JMS connection not available", e);
+	}
+	return con;
+    }
+    
 
     /**
      * Load in any additional configuration.
      */
-    @PostConstruct
-    public void importAndArrangeAdditionalConfig() {
+    @Produces @ApplicationScoped
+    public Configuration importAndArrangeAdditionalConfig() {
         // we require contained PUT because we use the Trellis WebDAV module, which requires it
         System.setProperty(CONFIG_HTTP_PUT_UNCONTAINED, "false");
         additionalConfigFile.map(this::toUrl).ifPresent(this::addConfig);
@@ -106,6 +127,7 @@ public class CassandraApplication extends Application {
         current().getContext().getPropertySources().stream().map(PropertySource::getName).forEach(log::debug);
         log.debug("Using Tamaya configuration:");
         log(current().getProperties());
+        return current();
     }
 
     private static <K, V> void log(Map<K, V> config) {
@@ -134,7 +156,7 @@ public class CassandraApplication extends Application {
 
     @Override
     public Set<Object> getSingletons() {
-		return ImmutableSet.of(ldpHttpResource, httpFilter, /* webDav, webDavRequestFilter, webDavResponseFilter,*/
-				resourceService, /* acService,*/ eventService, basicAuthFilter, agentAuthorizationFilter, acFilter);
+		return ImmutableSet.of(ldpHttpResource, httpFilter, webDav, webDavRequestFilter, webDavResponseFilter,
+				resourceService, eventService, basicAuthFilter, agentAuthorizationFilter, acFilter);
     }
 }

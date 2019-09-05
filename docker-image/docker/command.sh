@@ -11,7 +11,6 @@ OPTS="$OPTS -Dswarm.ajp.enable=false"
 # Logging Options
 OPTS="$OPTS -Dorg.jboss.logging.provider=slf4j"
 OPTS="$OPTS -Dlogback.configurationFile=/logback.xml"
-OPTS="$OPTS -Dtrellis.auth.basic.credentials=$TRELLIS_AUTH_BASIC_CREDENTIALS"
 
 ## JMS Options
 OPTS="$OPTS -Dtrellis.jms.use.queue=$TRELLIS_JMS_USE_QUEUE"
