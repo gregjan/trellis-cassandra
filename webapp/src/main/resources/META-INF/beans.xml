@@ -4,7 +4,6 @@
   bean-discovery-mode="all">
   <alternatives>
     <class>org.trellisldp.api.NoopAuditService</class>
-    <class>org.trellisldp.jms.JmsEventService</class>
     <class>org.trellisldp.api.NoopNamespaceService</class>
   </alternatives>
 </beans>

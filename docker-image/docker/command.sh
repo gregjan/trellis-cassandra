@@ -12,11 +12,4 @@ OPTS="$OPTS -Dswarm.ajp.enable=false"
 OPTS="$OPTS -Dorg.jboss.logging.provider=slf4j"
 OPTS="$OPTS -Dlogback.configurationFile=/logback.xml"
 
-## JMS Options
-OPTS="$OPTS -Dtrellis.jms.use.queue=$TRELLIS_JMS_USE_QUEUE"
-OPTS="$OPTS -Dtrellis.jms.queue=$TRELLIS_JMS_QUEUE_NAME"
-OPTS="$OPTS -Dtrellis.jms.url=$TRELLIS_JMS_URL"
-OPTS="$OPTS -Dtrellis.jms.username=$TRELLIS_JMS_USERNAME"
-OPTS="$OPTS -Dtrellis.jms.password=$TRELLIS_JMS_PASSWORD"
-
 java $OPTS -jar webapp-hollow-thorntail.jar webapp.war
